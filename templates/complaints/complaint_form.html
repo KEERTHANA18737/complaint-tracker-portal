@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}{{ form_title }}{% endblock %}
+
+{% block breadcrumb %}
+<div class="ct-breadcrumb px-4 pt-3">
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb mb-0">
+      <li class="breadcrumb-item"><a href="{% url 'dashboard:index' %}">Dashboard</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'complaints:list' %}">Complaints</a></li>
+      <li class="breadcrumb-item active">{{ form_title }}</li>
+    </ol>
+  </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+    <div class="ct-card">
+      <div class="ct-card-header">
+        <i class="bi bi-{% if object %}pencil-square{% else %}plus-circle{% endif %} me-2"></i>
+        {{ form_title }}
+      </div>
+      <div class="ct-card-body">
+        <form method="post" enctype="multipart/form-data" id="complaintForm" novalidate>
+          {% csrf_token %}
+          {% crispy form %}
+        </form>
+      </div>
+    </div>
+
+    <!-- Image preview -->
+    <div id="imagePreviewContainer" class="ct-card mt-3 d-none">
+      <div class="ct-card-header"><i class="bi bi-image me-2"></i>Image Preview</div>
+      <div class="ct-card-body text-center">
+        <img id="imagePreview" src="#" alt="Preview" class="img-fluid rounded ct-complaint-image">
+      </div>
+    </div>
+
+    {% if object and object.image %}
+    <div class="ct-card mt-3">
+      <div class="ct-card-header"><i class="bi bi-image me-2"></i>Current Image</div>
+      <div class="ct-card-body text-center">
+        <img src="{{ object.image.url }}" class="img-fluid rounded ct-complaint-image" alt="Current image">
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // Live image preview
+  document.getElementById('id_image')?.addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const maxSize = 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+      alert('Image must be smaller than 5 MB.');
+      e.target.value = '';
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = function(evt) {
+      document.getElementById('imagePreview').src = evt.target.result;
+      document.getElementById('imagePreviewContainer').classList.remove('d-none');
+    };
+    reader.readAsDataURL(file);
+  });
+</script>
+{% endblock %}

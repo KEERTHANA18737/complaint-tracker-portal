@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}Complaint #{{ complaint.pk }}{% endblock %}
+
+{% block breadcrumb %}
+<div class="ct-breadcrumb px-4 pt-3">
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb mb-0">
+      <li class="breadcrumb-item"><a href="{% url 'dashboard:index' %}">Dashboard</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'complaints:list' %}">Complaints</a></li>
+      <li class="breadcrumb-item active">#{{ complaint.pk }}</li>
+    </ol>
+  </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+
+  <!-- Main detail column -->
+  <div class="col-lg-8">
+
+    <!-- Complaint header -->
+    <div class="ct-card mb-3">
+      <div class="ct-card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div>
+          <code class="text-muted me-2">#{{ complaint.pk }}</code>
+          <span class="ct-badge {{ complaint.get_status_badge }}">
+            <i class="bi {{ complaint.get_status_icon }} me-1"></i>{{ complaint.get_status_display }}
+          </span>
+          <span class="ct-badge {{ complaint.get_priority_badge }} ms-1">{{ complaint.get_priority_display }}</span>
+        </div>
+        <div class="d-flex gap-2">
+          {% if user.can_manage_complaints or complaint.citizen == user %}
+          <a href="{% url 'complaints:update' complaint.pk %}" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-pencil me-1"></i>Edit
+          </a>
+          {% endif %}
+          {% if user.is_admin_role or complaint.citizen == user %}
+          <a href="{% url 'complaints:delete' complaint.pk %}" class="btn btn-sm btn-outline-danger">
+            <i class="bi bi-trash me-1"></i>Delete
+          </a>
+          {% endif %}
+        </div>
+      </div>
+      <div class="ct-card-body">
+        <h5 class="mb-3">{{ complaint.title }}</h5>
+        <div class="row g-2 mb-3 text-muted small">
+          <div class="col-sm-6">
+            <i class="bi bi-person me-1"></i>
+            <strong>Citizen:</strong> {{ complaint.citizen.get_full_name|default:complaint.citizen.username }}
+          </div>
+          <div class="col-sm-6">
+            <i class="bi bi-tag me-1"></i>
+            <strong>Category:</strong> {{ complaint.category|default:'Uncategorised' }}
+          </div>
+          <div class="col-sm-6">
+            <i class="bi bi-geo-alt me-1"></i>
+            <strong>Location:</strong> {{ complaint.location }}
+          </div>
+          <div class="col-sm-6">
+            <i class="bi bi-person-check me-1"></i>
+            <strong>Assigned to:</strong> {{ complaint.assigned_to.get_full_name|default:'Unassigned' }}
+          </div>
+          <div class="col-sm-6">
+            <i class="bi bi-calendar me-1"></i>
+            <strong>Submitted:</strong> {{ complaint.created_at|date:"d M Y, H:i" }}
+          </div>
+          <div class="col-sm-6">
+            <i class="bi bi-arrow-repeat me-1"></i>
+            <strong>Updated:</strong> {{ complaint.updated_at|date:"d M Y, H:i" }}
+          </div>
+        </div>
+        <h6 class="fw-semibold">Description</h6>
+        <p class="text-muted">{{ complaint.description }}</p>
+
+        {% if complaint.image %}
+        <h6 class="fw-semibold mt-3">Attached Image</h6>
+        <a href="{{ complaint.image.url }}" target="_blank">
+          <img src="{{ complaint.image.url }}" class="ct-complaint-image img-fluid rounded" alt="Complaint image">
+        </a>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Timeline -->
+    <div class="ct-card">
+      <div class="ct-card-header"><i class="bi bi-clock-history me-2"></i>Activity Timeline</div>
+      <div class="ct-card-body">
+        {% if history %}
+        <div class="ct-timeline">
+          {% for entry in history %}
+          <div class="ct-timeline-item">
+            <div class="ct-timeline-dot
+              {% if entry.new_status == 'resolved' %}bg-success
+              {% elif entry.new_status == 'closed'  %}bg-secondary
+              {% elif entry.new_status == 'in_progress' %}bg-primary
+              {% elif entry.new_status == 'assigned' %}bg-info
+              {% else %}bg-warning{% endif %}">
+            </div>
+            <div class="ct-timeline-content">
+              <div class="d-flex justify-content-between align-items-start">
+                <div>
+                  {% if entry.old_status %}
+                    <strong>Status changed</strong>:
+                    <span class="text-muted">{{ entry.old_status|title }}</span>
+                    <i class="bi bi-arrow-right mx-1 text-muted"></i>
+                    <strong>{{ entry.new_status|title }}</strong>
+                  {% else %}
+                    <strong>Complaint submitted</strong>
+                  {% endif %}
+                  {% if entry.changed_by %}
+                    <span class="text-muted small ms-2">by {{ entry.changed_by.get_full_name|default:entry.changed_by.username }}</span>
+                  {% endif %}
+                </div>
+                <small class="text-muted">{{ entry.timestamp|date:"d M Y, H:i" }}</small>
+              </div>
+              {% if entry.remarks %}
+                <p class="text-muted small mt-1 mb-0"><i class="bi bi-chat-left-text me-1"></i>{{ entry.remarks }}</p>
+              {% endif %}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+          <p class="text-muted mb-0">No history yet.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Sidebar column -->
+  <div class="col-lg-4">
+
+    <!-- Status update (officers/admins only) -->
+    {% if user.can_manage_complaints %}
+    <div class="ct-card mb-3">
+      <div class="ct-card-header"><i class="bi bi-sliders me-2"></i>Update Status</div>
+      <div class="ct-card-body">
+        <form method="post" action="{% url 'complaints:update_status' complaint.pk %}">
+          {% csrf_token %}
+          {% crispy status_form %}
+        </form>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Meta info -->
+    <div class="ct-card">
+      <div class="ct-card-header"><i class="bi bi-info-circle me-2"></i>Details</div>
+      <div class="ct-card-body">
+        <dl class="row mb-0 small">
+          <dt class="col-5 text-muted">ID</dt>
+          <dd class="col-7"><code>#{{ complaint.pk }}</code></dd>
+          <dt class="col-5 text-muted">Status</dt>
+          <dd class="col-7"><span class="ct-badge {{ complaint.get_status_badge }}">{{ complaint.get_status_display }}</span></dd>
+          <dt class="col-5 text-muted">Priority</dt>
+          <dd class="col-7"><span class="ct-badge {{ complaint.get_priority_badge }}">{{ complaint.get_priority_display }}</span></dd>
+          <dt class="col-5 text-muted">Category</dt>
+          <dd class="col-7">{{ complaint.category|default:'—' }}</dd>
+          <dt class="col-5 text-muted">Officer</dt>
+          <dd class="col-7">{{ complaint.assigned_to.get_full_name|default:'Unassigned' }}</dd>
+          <dt class="col-5 text-muted">History</dt>
+          <dd class="col-7">{{ history|length }} entries</dd>
+        </dl>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}My Profile{% endblock %}
+
+{% block breadcrumb %}
+<div class="ct-breadcrumb px-4 pt-3">
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb mb-0">
+      <li class="breadcrumb-item"><a href="{% url 'dashboard:index' %}">Dashboard</a></li>
+      <li class="breadcrumb-item active">Profile</li>
+    </ol>
+  </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+  <!-- Avatar column -->
+  <div class="col-md-3 text-center">
+    <div class="ct-card p-4">
+      {% if user.avatar %}
+        <img src="{{ user.avatar.url }}" class="rounded-circle mb-3" width="100" height="100" style="object-fit:cover;" alt="Avatar">
+      {% else %}
+        <div class="ct-avatar-lg rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center">
+          {{ user.username|first|upper }}
+        </div>
+      {% endif %}
+      <h5 class="mb-0">{{ user.get_full_name|default:user.username }}</h5>
+      <span class="badge {{ user.get_role_badge }} mt-1">{{ user.get_role_display }}</span>
+      <div class="mt-2 text-muted small">{{ user.email }}</div>
+      <hr>
+      <div class="text-start small">
+        <div><i class="bi bi-telephone me-2 text-muted"></i>{{ user.phone|default:'—' }}</div>
+        <div class="mt-1"><i class="bi bi-geo-alt me-2 text-muted"></i>{{ user.address|default:'—' }}</div>
+        <div class="mt-1"><i class="bi bi-calendar me-2 text-muted"></i>Joined {{ user.date_joined|date:"d M Y" }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit form column -->
+  <div class="col-md-9">
+    <div class="ct-card">
+      <div class="ct-card-header"><i class="bi bi-pencil-square me-2"></i>Edit Profile</div>
+      <div class="ct-card-body">
+        {% if messages %}
+          {% for message in messages %}
+            <div class="alert alert-{{ message.tags|default:'info' }}">{{ message }}</div>
+          {% endfor %}
+        {% endif %}
+        <form method="post" enctype="multipart/form-data">
+          {% csrf_token %}
+          {% crispy form %}
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

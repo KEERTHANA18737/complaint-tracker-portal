@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}ComplaintTracker{% endblock %} | Government Issue Portal</title>
+
+  <!-- Bootstrap 5 -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="/static/css/style.css">
+  {% block extra_css %}{% endblock %}
+</head>
+<body class="ct-body">
+
+{% if user.is_authenticated %}
+  {% include "includes/navbar.html" %}
+
+  <div class="ct-wrapper d-flex">
+    {% include "includes/sidebar.html" %}
+
+    <main class="ct-main flex-grow-1">
+      <!-- Breadcrumb -->
+      {% block breadcrumb %}{% endblock %}
+
+      <!-- Django messages -->
+      {% if messages %}
+        <div class="ct-alerts px-3 pt-3">
+          {% for message in messages %}
+            <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show" role="alert">
+              <i class="bi bi-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' or message.tags == 'danger' %}exclamation-triangle{% elif message.tags == 'warning' %}exclamation-circle{% else %}info-circle{% endif %} me-2"></i>
+              {{ message }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      <div class="ct-content p-4">
+        {% block content %}{% endblock %}
+      </div>
+    </main>
+  </div>
+
+  {% include "includes/footer.html" %}
+
+{% else %}
+  <!-- Unauthenticated layout: full page -->
+  {% block auth_content %}{% endblock %}
+{% endif %}
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<!-- Custom JS -->
+<script src="/static/js/main.js"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

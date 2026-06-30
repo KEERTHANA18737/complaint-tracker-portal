@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block breadcrumb %}
+<div class="ct-breadcrumb px-4 pt-3">
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb mb-0">
+      <li class="breadcrumb-item active"><i class="bi bi-speedometer2 me-1"></i>Dashboard</li>
+    </ol>
+  </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+<h4 class="ct-page-title mb-1">
+  Welcome, {{ user.first_name|default:user.username }}
+  <span class="badge {{ user.get_role_badge }} fs-6 ms-2">{{ user.get_role_display }}</span>
+</h4>
+<p class="text-muted mb-4">Here's an overview of complaint activity.</p>
+
+<!-- Stats Cards -->
+<div class="row g-3 mb-4">
+  <div class="col-sm-6 col-xl-2">
+    <div class="ct-stat-card ct-stat-total">
+      <div class="ct-stat-icon"><i class="bi bi-clipboard-data"></i></div>
+      <div class="ct-stat-value">{{ stats.total }}</div>
+      <div class="ct-stat-label">Total</div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl-2">
+    <div class="ct-stat-card ct-stat-pending">
+      <div class="ct-stat-icon"><i class="bi bi-clock"></i></div>
+      <div class="ct-stat-value">{{ stats.pending }}</div>
+      <div class="ct-stat-label">Pending</div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl-2">
+    <div class="ct-stat-card ct-stat-progress">
+      <div class="ct-stat-icon"><i class="bi bi-arrow-repeat"></i></div>
+      <div class="ct-stat-value">{{ stats.in_progress }}</div>
+      <div class="ct-stat-label">In Progress</div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl-2">
+    <div class="ct-stat-card ct-stat-resolved">
+      <div class="ct-stat-icon"><i class="bi bi-check-circle"></i></div>
+      <div class="ct-stat-value">{{ stats.resolved }}</div>
+      <div class="ct-stat-label">Resolved</div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl-2">
+    <div class="ct-stat-card ct-stat-closed">
+      <div class="ct-stat-icon"><i class="bi bi-archive"></i></div>
+      <div class="ct-stat-value">{{ stats.closed }}</div>
+      <div class="ct-stat-label">Closed</div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl-2">
+    <div class="ct-stat-card ct-stat-critical">
+      <div class="ct-stat-icon"><i class="bi bi-exclamation-triangle"></i></div>
+      <div class="ct-stat-value">{{ stats.critical }}</div>
+      <div class="ct-stat-label">Critical</div>
+    </div>
+  </div>
+</div>
+
+<!-- Charts Row -->
+<div class="row g-3 mb-4">
+  <div class="col-lg-5">
+    <div class="ct-card h-100">
+      <div class="ct-card-header"><i class="bi bi-pie-chart me-2"></i>Category Distribution</div>
+      <div class="ct-card-body d-flex align-items-center justify-content-center" style="min-height:240px;">
+        <canvas id="categoryChart" style="max-height:220px;"></canvas>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-7">
+    <div class="ct-card h-100">
+      <div class="ct-card-header"><i class="bi bi-bar-chart-line me-2"></i>Monthly Trend (6 months)</div>
+      <div class="ct-card-body" style="min-height:240px;">
+        <canvas id="monthlyChart" style="max-height:220px;"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Status Pie + Latest Complaints -->
+<div class="row g-3 mb-4">
+  <div class="col-lg-4">
+    <div class="ct-card h-100">
+      <div class="ct-card-header"><i class="bi bi-pie-chart-fill me-2"></i>Status Breakdown</div>
+      <div class="ct-card-body d-flex align-items-center justify-content-center" style="min-height:220px;">
+        <canvas id="statusChart" style="max-height:200px;"></canvas>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-8">
+    <div class="ct-card h-100">
+      <div class="ct-card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-clock-history me-2"></i>Latest Complaints</span>
+        <a href="{% url 'complaints:list' %}" class="btn btn-sm btn-outline-primary">View All</a>
+      </div>
+      <div class="ct-card-body p-0">
+        {% if latest %}
+        <div class="table-responsive">
+          <table class="table table-hover ct-table mb-0">
+            <thead>
+              <tr>
+                <th>#</th><th>Title</th><th>Category</th><th>Status</th><th>Priority</th><th>Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for c in latest %}
+              <tr onclick="window.location='{% url 'complaints:detail' c.pk %}'" style="cursor:pointer;">
+                <td><code>#{{ c.pk }}</code></td>
+                <td>{{ c.title|truncatechars:30 }}</td>
+                <td>{{ c.category|default:'-' }}</td>
+                <td><span class="ct-badge {{ c.get_status_badge }}">{{ c.get_status_display }}</span></td>
+                <td><span class="ct-badge {{ c.get_priority_badge }}">{{ c.get_priority_display }}</span></td>
+                <td><small>{{ c.created_at|date:"d M Y" }}</small></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+          <div class="ct-empty-state">
+            <i class="bi bi-inbox"></i>
+            <p>No complaints yet.</p>
+            {% if user.is_citizen %}
+              <a href="{% url 'complaints:create' %}" class="btn btn-primary btn-sm">Submit one now</a>
+            {% endif %}
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+{% if my_assigned %}
+<div class="ct-card mb-4">
+  <div class="ct-card-header"><i class="bi bi-person-check me-2"></i>My Assigned Complaints</div>
+  <div class="ct-card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover ct-table mb-0">
+        <thead><tr><th>#</th><th>Title</th><th>Priority</th><th>Citizen</th><th>Action</th></tr></thead>
+        <tbody>
+          {% for c in my_assigned %}
+          <tr>
+            <td><code>#{{ c.pk }}</code></td>
+            <td>{{ c.title|truncatechars:40 }}</td>
+            <td><span class="ct-badge {{ c.get_priority_badge }}">{{ c.get_priority_display }}</span></td>
+            <td>{{ c.citizen.get_full_name|default:c.citizen.username }}</td>
+            <td><a href="{% url 'complaints:detail' c.pk %}" class="btn btn-sm btn-outline-primary">View</a></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="/static/js/dashboard.js"></script>
+<script>
+  initDashboardCharts(
+    {{ category_labels|safe }},
+    {{ category_counts|safe }},
+    {{ monthly_labels|safe }},
+    {{ monthly_counts|safe }},
+    {{ status_labels|safe }},
+    {{ status_counts|safe }}
+  );
+</script>
+{% endblock %}

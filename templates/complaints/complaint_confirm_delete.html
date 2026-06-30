@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}Delete Complaint{% endblock %}
+
+{% block breadcrumb %}
+<div class="ct-breadcrumb px-4 pt-3">
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb mb-0">
+      <li class="breadcrumb-item"><a href="{% url 'dashboard:index' %}">Dashboard</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'complaints:list' %}">Complaints</a></li>
+      <li class="breadcrumb-item active">Delete</li>
+    </ol>
+  </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-6">
+    <div class="ct-card border-danger">
+      <div class="ct-card-header bg-danger text-white">
+        <i class="bi bi-exclamation-triangle me-2"></i>Confirm Delete
+      </div>
+      <div class="ct-card-body text-center py-4">
+        <i class="bi bi-trash display-4 text-danger mb-3"></i>
+        <h5>Are you sure?</h5>
+        <p class="text-muted">
+          You are about to permanently delete complaint
+          <strong>#{{ object.pk }} — {{ object.title }}</strong>.
+          This action cannot be undone.
+        </p>
+        <form method="post">
+          {% csrf_token %}
+          <div class="d-flex justify-content-center gap-3 mt-3">
+            <button type="submit" class="btn btn-danger">
+              <i class="bi bi-trash me-1"></i>Yes, Delete
+            </button>
+            <a href="{% url 'complaints:detail' object.pk %}" class="btn btn-outline-secondary">
+              Cancel
+            </a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

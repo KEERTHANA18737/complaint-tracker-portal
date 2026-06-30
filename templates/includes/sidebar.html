@@ -1,0 +1,90 @@
+<aside class="ct-sidebar d-flex flex-column" id="sidebar">
+  <nav class="ct-sidebar-nav flex-grow-1 p-3">
+
+    <div class="ct-sidebar-section-label">Main</div>
+    <ul class="nav flex-column gap-1">
+      <li class="nav-item">
+        <a class="nav-link ct-sidebar-link {% if request.resolver_match.namespace == 'dashboard' %}active{% endif %}"
+           href="{% url 'dashboard:index' %}">
+          <i class="bi bi-speedometer2"></i> Dashboard
+        </a>
+      </li>
+    </ul>
+
+    <div class="ct-sidebar-section-label mt-3">Complaints</div>
+    <ul class="nav flex-column gap-1">
+      {% if not user.is_citizen %}
+      <li class="nav-item">
+        <a class="nav-link ct-sidebar-link {% if request.resolver_match.url_name == 'list' %}active{% endif %}"
+           href="{% url 'complaints:list' %}">
+          <i class="bi bi-list-ul"></i> All Complaints
+        </a>
+      </li>
+      {% endif %}
+      {% if user.is_citizen %}
+      <li class="nav-item">
+        <a class="nav-link ct-sidebar-link {% if request.resolver_match.url_name == 'list' %}active{% endif %}"
+           href="{% url 'complaints:list' %}">
+          <i class="bi bi-list-ul"></i> My Complaints
+        </a>
+      </li>
+      {% endif %}
+      {% if user.is_citizen or user.is_admin_role %}
+      <li class="nav-item">
+        <a class="nav-link ct-sidebar-link {% if request.resolver_match.url_name == 'create' %}active{% endif %}"
+           href="{% url 'complaints:create' %}">
+          <i class="bi bi-plus-circle"></i> Submit Complaint
+        </a>
+      </li>
+      {% endif %}
+    </ul>
+
+    {% if user.can_manage_complaints %}
+    <div class="ct-sidebar-section-label mt-3">Management</div>
+    <ul class="nav flex-column gap-1">
+      <li class="nav-item">
+        <a class="nav-link ct-sidebar-link" href="{% url 'complaints:list' %}?status=pending">
+          <i class="bi bi-clock-history"></i> Pending
+          <span class="badge bg-warning text-dark ms-auto">{% with pending=user.assigned_complaints.filter %}…{% endwith %}</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link ct-sidebar-link" href="{% url 'complaints:list' %}?status=in_progress">
+          <i class="bi bi-arrow-repeat"></i> In Progress
+        </a>
+      </li>
+    </ul>
+    {% endif %}
+
+    <div class="ct-sidebar-section-label mt-3">Account</div>
+    <ul class="nav flex-column gap-1">
+      <li class="nav-item">
+        <a class="nav-link ct-sidebar-link" href="{% url 'complaints:notifications' %}">
+          <i class="bi bi-bell"></i> Notifications
+          {% if unread_notification_count %}
+            <span class="badge bg-danger ms-auto">{{ unread_notification_count }}</span>
+          {% endif %}
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link ct-sidebar-link" href="{% url 'accounts:profile' %}">
+          <i class="bi bi-person-circle"></i> Profile
+        </a>
+      </li>
+      {% if user.is_staff %}
+      <li class="nav-item">
+        <a class="nav-link ct-sidebar-link" href="{% url 'admin:index' %}">
+          <i class="bi bi-gear-fill"></i> Admin
+        </a>
+      </li>
+      {% endif %}
+    </ul>
+  </nav>
+
+  <!-- Sidebar footer -->
+  <div class="ct-sidebar-footer p-3">
+    <a href="{% url 'accounts:logout' %}" class="btn btn-outline-light btn-sm w-100">
+      <i class="bi bi-box-arrow-right me-1"></i> Sign Out
+    </a>
+  </div>
+</aside>

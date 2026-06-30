@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}Notifications{% endblock %}
+
+{% block breadcrumb %}
+<div class="ct-breadcrumb px-4 pt-3">
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb mb-0">
+      <li class="breadcrumb-item"><a href="{% url 'dashboard:index' %}">Dashboard</a></li>
+      <li class="breadcrumb-item active">Notifications</li>
+    </ol>
+  </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+<h4 class="ct-page-title mb-4"><i class="bi bi-bell me-2"></i>Notifications</h4>
+
+{% if notifications %}
+  <div class="ct-card">
+    <div class="ct-card-body p-0">
+      {% for notif in notifications %}
+      <div class="ct-notification-item {% if not notif.is_read %}ct-notification-unread{% endif %}">
+        <div class="d-flex gap-3 align-items-start">
+          <div class="ct-notif-icon">
+            <i class="bi bi-bell{% if not notif.is_read %}-fill text-primary{% endif %}"></i>
+          </div>
+          <div class="flex-grow-1">
+            <p class="mb-1">{{ notif.message }}</p>
+            <div class="d-flex gap-3 align-items-center">
+              <small class="text-muted"><i class="bi bi-clock me-1"></i>{{ notif.created_at|date:"d M Y, H:i" }}</small>
+              {% if notif.complaint %}
+                <a href="{% url 'complaints:detail' notif.complaint.pk %}" class="btn btn-xs btn-outline-primary btn-sm py-0">
+                  View Complaint
+                </a>
+              {% endif %}
+            </div>
+          </div>
+          {% if not notif.is_read %}
+            <span class="badge bg-primary">New</span>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+{% else %}
+  <div class="ct-empty-state">
+    <i class="bi bi-bell-slash"></i>
+    <p>No notifications yet.</p>
+  </div>
+{% endif %}
+{% endblock %}
